@@ -1,0 +1,58 @@
+[user]
+	name = Wisdawms
+	email = 135806939+Wisdawms@users.noreply.github.com
+[init]
+	defaultBranch = main
+[color]
+	ui = true
+[pull]
+	rebase = false
+
+# [put in ~/.gitconfig (open with vim or nano)] # for github codespaces the .gitconfig file is located in repo-path/.git/config
+[alias]
+  
+  # add, commit, push
+  acp = "!f () { git add *; git commit -a -m \"${1:-$(git status --porcelain)} # $(date '+%Y-%m-%d -%l:%M %p')\"; git push -f; }; f"
+  
+  # goes back to previous commit, and makes a new commit with the reverted changes (revert previous commit into new commit)
+  backmk = !git revert HEAD --no-edit
+  
+  # goes back to previous commit, but keeps the local files
+  backrm = "!git reset HEAD~1"
+  
+  # goes back to previous commit and pulls those changes into local
+  backrmf = "!git reset --hard HEAD~1"
+  
+  # goes back to the previous commit and pulls from remote into local
+  backrmpull = "!git reset --hard HEAD~1 && git pull"
+  
+  # goes back to the previous commit and pushes those changes to the remote repo
+  backrmpush = "!git reset --hard HEAD~1 && git push origin HEAD --force"
+  
+  # unadd staged changes
+  untrack = "!git restore --staged *"
+  
+  # pulls head and merges it with local repo // basically updates your local repo to the remote HEAD
+  pullhead = "! rm ./* -r && git restore * && echo "Pulled from HEAD and merged!""
+  
+  # push local commits log to head
+  pushhead = "! git push -f"
+  
+  # overwrites the latest commit with the current changes
+  backow = "!git add --all && git commit --amend --no-edit; git push -f"
+  
+  # create backup repo from current repo
+  bkup = "!orig_repo=https://github.com/$(gh repo view | awk '/name:/ {print $2}'); f() { if [ -d .git ]; then echo; echo '(!) Make sure to select the second option for the first prompt.'; echo '(!) By default, the backup repo is set as private. Use (gh repo edit --visibilty public) without parantheses to make it public again.'; echo; if [ ! -d ../$(basename \"$(pwd)\").bak ]; then mkdir ../$(basename \"$(pwd)\").bak && cp -r /$(pwd)/* ../$(basename \"$(pwd)\").bak && cd ../$(basename \"$(pwd)\").bak && git init && git add * && git commit -m init_backup && gh repo create; cd $(pwd); gh repo edit $(git config --get user.name)/$(basename `git rev-parse --show-toplevel`) --visibility private; gh repo edit -d 'backup repo for: '\"$orig_repo\"; echo '> Repository set to private. Use (gh repo edit --visibilty public) without parantheses to make it public again.'; echo '> See backup repository here: '\"https://github.com/$(gh repo view | awk '/name:/ {print $2}')\"; else echo '(!) Backup directory already exists.'; fi else echo 'No .git directory found'; fi }; f"
+  
+  
+  # removes backup repo while in current repo
+  bkuprm = "!f() { if [ -d ../$(basename \"$(pwd)\").bak ]; then read -p \"$1(!) Are you sure you want to delete the backup repo entirely? [y/n]: \" response; case \"$response\" in [Yy]*) cd ../$(basename \"$(pwd)\").bak && gh repo delete --confirm && dir_name=$(basename \"$(pwd)\") && cd .. && rm -r -f $dir_name && echo '(!) Deleted backup repo.'; cd ..;; *) echo \"Operation canceled.\" ;; esac; else echo '(!) Backup directory does not exist. Please make one first using (git bkup)'; fi; }; f"
+  
+  # make repo public/private
+  public="!orig_repo=https://github.com/$(gh repo view | awk '/name:/ {print $2}') && gh repo edit --visibility public && echo '> '\"$orig_repo\"' has been set to public.'" # usage is git public 
+  private="!orig_repo=https://github.com/$(gh repo view | awk '/name:/ {print $2}') && gh repo edit --visibility private && echo '> '\"$orig_repo\"' has been set to private.'" # usage is git private 
+  
+  bkupdate="!orig_dir=$(pwd); f() { if cd $(pwd).bak; then if [ -d $orig_dir/.git ]; then rm * -r && cp -r -f $orig_dir/* . && git acp 'backup_update'; else echo 'No .git directory found'; fi; else echo '(!) Backup directory not found'; fi }; f"
+
+[credential]
+	helper = store
